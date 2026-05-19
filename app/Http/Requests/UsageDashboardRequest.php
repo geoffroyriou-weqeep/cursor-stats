@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Services\Cursor\DatePreset;
-use App\Services\Cursor\ReportingPeriod;
-use App\Services\Cursor\ReportingPeriodFactory;
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Enums\DatePreset;
+use App\Services\Cursor\Factories\ReportingPeriodFactory;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;

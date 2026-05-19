@@ -1,8 +1,8 @@
 <?php
 
 use App\Services\Cursor\Contracts\CursorUsageClient;
-use App\Services\Cursor\ReportingPeriod;
-use App\Services\Cursor\UsageEventDto;
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Dto\UsageEventDto;
 
 it('renders today usage summary on the dashboard by default', function () {
     config([
@@ -26,6 +26,8 @@ it('renders today usage summary on the dashboard by default', function () {
         ->assertSee('Input')
         ->assertSee('Output')
         ->assertSee('Cache read')
+        ->assertSee('Contexte moyen')
+        ->assertSee('Moyenne des tokens envoyés au modèle, par appel.')
         ->assertSee('Montant réel')
         ->assertSee('0,03 €')
         ->assertSee('usage inclus valorisé', false);
@@ -48,6 +50,26 @@ it('formats large token totals with thousands separators', function () {
         ->assertSee('1 234 567', false)
         ->assertSee('89 012', false)
         ->assertSee('3 456', false);
+});
+
+it('displays average context size on the dashboard', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')->andReturn([
+            new UsageEventDto(1, true, 1000, 0, 0, 0),
+            new UsageEventDto(2, true, 3000, 0, 0, 0),
+            new UsageEventDto(3, false, 9_999_999, 0, 0, 0),
+        ]);
+    });
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('Contexte moyen')
+        ->assertSee('2 000', false);
 });
 
 it('renders yesterday usage summary when preset is yesterday', function () {

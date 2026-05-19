@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Cursor;
+namespace App\Services\Cursor\Dto;
 
 final readonly class UsageSummary
 {
@@ -8,6 +8,7 @@ final readonly class UsageSummary
         public int $inputTokens,
         public int $outputTokens,
         public int $cacheReadTokens,
+        public int $averageContextSize,
         public int $usageCostCents,
         public int $eventCount,
     ) {}

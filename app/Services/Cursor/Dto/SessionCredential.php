@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Cursor;
+namespace App\Services\Cursor\Dto;
 
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
 

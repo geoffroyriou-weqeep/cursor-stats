@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UsageDashboardRequest;
+use App\Services\Cursor\Builders\UsageSummaryBuilder;
 use App\Services\Cursor\Contracts\CursorUsageClient;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
-use App\Services\Cursor\ReportingPeriodFactory;
-use App\Services\Cursor\SqliteSessionCredentialResolver;
-use App\Services\Cursor\UsageSummaryBuilder;
+use App\Services\Cursor\Factories\ReportingPeriodFactory;
+use App\Services\Cursor\Resolvers\SqliteSessionCredentialResolver;
 use Illuminate\View\View;
 
 class UsageDashboardController extends Controller

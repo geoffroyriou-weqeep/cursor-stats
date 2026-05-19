@@ -1,7 +1,7 @@
 <?php
 
-use App\Services\Cursor\DatePreset;
-use App\Services\Cursor\ReportingPeriodFactory;
+use App\Services\Cursor\Enums\DatePreset;
+use App\Services\Cursor\Factories\ReportingPeriodFactory;
 use Carbon\CarbonImmutable;
 
 beforeEach(function () {

@@ -2,7 +2,7 @@
 
 namespace App\Services\Cursor\Contracts;
 
-use App\Services\Cursor\SessionCredential;
+use App\Services\Cursor\Dto\SessionCredential;
 
 interface SessionCredentialResolver
 {

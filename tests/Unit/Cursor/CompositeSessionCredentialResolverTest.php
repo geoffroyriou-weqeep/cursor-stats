@@ -1,9 +1,9 @@
 <?php
 
-use App\Services\Cursor\CompositeSessionCredentialResolver;
-use App\Services\Cursor\EnvSessionCredentialResolver;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
-use App\Services\Cursor\SqliteSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\CompositeSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\EnvSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\SqliteSessionCredentialResolver;
 
 it('falls back to env cookie when sqlite has no token', function () {
     $missingDb = sys_get_temp_dir().'/cursor-stats-missing-'.uniqid().'.vscdb';

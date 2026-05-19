@@ -19,8 +19,8 @@ L’utilisateur veut un outil **local** (Laravel Herd) qu’il recharge à la ma
 Une application Laravel locale affiche une page unique avec :
 
 1. Sélection de période via **Date Preset** (Aujourd’hui, Hier, 7 derniers jours) ou **Date Range** personnalisée (deux dates).
-2. Un **Usage Summary** : totaux de tokens (input, output, cache read) pour la période.
-3. Un **Montant réel** sous les stats : **Usage Cost** = somme des `chargedCents` des Usage Events token-based, en euros.
+2. Un **Usage Summary** : totaux de tokens (input, output, cache read) pour la période, plus **Contexte moyen** (**Average Context Size**).
+3. Un **Montant réel** sous les stats : **Usage Cost** = somme des `chargedCents` des Usage Events token-based de la période, en euros.
 4. En cas d’**Auth Failure** : page dédiée avec instructions (pas de stats à zéro).
 
 Les données proviennent de l’**Usage Data Source** dashboard (API non officielle), via **Session Credential** hybride (SQLite Cursor → fallback cookie).
@@ -38,22 +38,23 @@ Les données proviennent de l’**Usage Data Source** dashboard (API non officie
 7. As a Cursor Pro+ user, I want to see total input tokens for the selected period, so that I understand input volume.
 8. As a Cursor Pro+ user, I want to see total output tokens for the selected period, so that I understand generation volume.
 9. As a Cursor Pro+ user, I want to see total cache read tokens for the selected period, so that I understand cache efficiency.
-10. As a Cursor Pro+ user, I want a single “Montant réel” line below the token stats, so that I see total charged cost for the period in euros.
-11. As a Cursor Pro+ user, I want the dashboard to use my Cursor session automatically when possible, so that I don’t copy cookies on every visit.
-12. As a Cursor Pro+ user, I want to configure a fallback session cookie in `.env`, so that the dashboard still works if SQLite read fails.
-13. As a Cursor Pro+ user, I want a clear error page when authentication fails, so that I know how to fix it (open Cursor, refresh token, set cookie).
-14. As a Cursor Pro+ user, I want to refresh the page to update stats, so that I control when data is fetched (no background jobs).
-15. As a Cursor Pro+ user, I want my session credentials to stay on my machine, so that I don’t expose my Cursor account to a remote server.
-16. As a Cursor Pro+ user, I want numbers formatted readably (thousands separators), so that large token counts are easy to scan.
-17. As a Cursor Pro+ user, I want the UI to be simple (Tailwind, no charts), so that the dashboard loads fast and stays maintainable.
-18. As a Cursor Pro+ user, I want only my own Usage Events (implicit via session), so that I never see teammates’ data on a personal Pro+ account.
-19. As a developer, I want deep modules with small interfaces, so that API fragility and aggregation logic are testable in isolation.
-20. As a developer, I want Laravel conventions (config, services, form request, controller, Blade), so that the codebase stays familiar and maintainable.
-21. As a developer, I want configuration via `.env` for timezone and optional cookie, so that secrets aren’t hardcoded.
-22. As a developer, I want non-token-based Usage Events excluded from token totals, so that aggregates aren’t skewed.
-23. As a developer, I want the usage client to paginate through all Usage Events for a Date Range on each page load, so that totals are complete.
-24. As a developer, I want domain exceptions for auth failures, so that the HTTP layer can render the Auth Failure view consistently.
-25. As a future Enterprise user, I want the Usage Summary contract to stay stable, so that an Admin API adapter could be added later without rewriting the UI.
+10. As a Cursor Pro+ user, I want to see **Contexte moyen** (average input tokens per Usage Event) for the selected period, so that I understand how large my typical chat context is per call — distinct from the total Input card.
+11. As a Cursor Pro+ user, I want a single “Montant réel” line below the token stats, so that I see total charged cost for the period in euros.
+12. As a Cursor Pro+ user, I want the dashboard to use my Cursor session automatically when possible, so that I don’t copy cookies on every visit.
+13. As a Cursor Pro+ user, I want to configure a fallback session cookie in `.env`, so that the dashboard still works if SQLite read fails.
+14. As a Cursor Pro+ user, I want a clear error page when authentication fails, so that I know how to fix it (open Cursor, refresh token, set cookie).
+15. As a Cursor Pro+ user, I want to refresh the page to update stats, so that I control when data is fetched (no background jobs).
+16. As a Cursor Pro+ user, I want my session credentials to stay on my machine, so that I don’t expose my Cursor account to a remote server.
+17. As a Cursor Pro+ user, I want numbers formatted readably (thousands separators), so that large token counts are easy to scan.
+18. As a Cursor Pro+ user, I want the UI to be simple (Tailwind, no charts), so that the dashboard loads fast and stays maintainable.
+19. As a Cursor Pro+ user, I want only my own Usage Events (implicit via session), so that I never see teammates’ data on a personal Pro+ account.
+20. As a developer, I want deep modules with small interfaces, so that API fragility and aggregation logic are testable in isolation.
+21. As a developer, I want Laravel conventions (config, services, form request, controller, Blade), so that the codebase stays familiar and maintainable.
+22. As a developer, I want configuration via `.env` for timezone and optional cookie, so that secrets aren’t hardcoded.
+23. As a developer, I want non-token-based Usage Events excluded from token totals and from **Average Context Size**, so that aggregates aren’t skewed.
+24. As a developer, I want the usage client to paginate through all Usage Events for a Date Range on each page load, so that totals are complete.
+25. As a developer, I want domain exceptions for auth failures, so that the HTTP layer can render the Auth Failure view consistently.
+26. As a future Enterprise user, I want the Usage Summary contract to stay stable, so that an Admin API adapter could be added later without rewriting the UI.
 
 ---
 
@@ -135,13 +136,14 @@ No custom `app/Modules/` package structure — use `App\Services\Cursor\` (or `A
 
 **Contract:**
 
-- `build(iterable<UsageEventDto> $events): UsageSummary` — value object with `inputTokens`, `outputTokens`, `cacheReadTokens`, `usageCostCents` (int), `eventCount`.
+- `build(iterable<UsageEventDto> $events): UsageSummary` — value object with `inputTokens`, `outputTokens`, `cacheReadTokens`, `averageContextSize` (int, rounded), `usageCostCents` (int), `eventCount`.
 
 **Rules:**
 
 - Sum tokens only when `isTokenBasedCall` is true and `tokenUsage` present.
+- **Average Context Size:** sum of `inputTokens` (the **Context Size** per event — chat → model, no cache read) divided by the count of token-based Usage Events in the Date Range; display **0** when that count is zero (same population as token totals and `eventCount`). Round to integer for display (e.g. `round()`).
 - **Usage Cost:** sum `chargedCents` (float from API → round to cents integer for display).
-- Ignore non-token events for token totals; still include their `chargedCents` in Usage Cost only if token-based (match rule: token-based only for cost too, per CONTEXT).
+- Ignore non-token events for token totals and average context; still include their `chargedCents` in Usage Cost only if token-based (match rule: token-based only for cost too, per CONTEXT).
 
 **Why deep:** Business rules for aggregates are the core domain; must be unit-tested without HTTP.
 
@@ -177,8 +179,10 @@ On `CursorSessionUnavailableException` → `usage.auth-failure` view (no redirec
 
 - Single route `GET /` (or `/usage`).
 - Preset links/buttons set query string; custom range via two `<input type="date">` + submit.
-- Display: three stat rows + separator + **Montant réel** formatted `X,XX €`.
-- Labels: « Input », « Output », « Cache read » (per CONTEXT).
+- Display: four stat cards in a responsive grid (`grid-cols-1` / `sm:grid-cols-2` / `lg:grid-cols-4`) + **Montant réel** band below.
+- Labels (per CONTEXT): « Input », « Output », « Cache read », « Contexte moyen ».
+- **Contexte moyen** card: rose accent (`rose-*`); helper text « Moyenne des tokens envoyés au modèle, par appel. »; value uses same thousands formatting as other token stats.
+- **Montant réel** helper text: « Coût agrégé des appels inclus dans ce résumé. » (avoid “token-based” in user-facing copy).
 - French UI copy acceptable (matches conversation).
 
 ### Error handling
@@ -202,7 +206,7 @@ On `CursorSessionUnavailableException` → `usage.auth-failure` view (no redirec
 
 | Module | Test type | Rationale |
 |--------|-----------|-----------|
-| `UsageSummaryBuilder` | Unit (Pest) | Core business rules; pure functions |
+| `UsageSummaryBuilder` | Unit (Pest) | Core business rules; pure functions; include **Average Context Size** (mean input per token-based event, zero events → 0) |
 | `ReportingPeriodFactory` | Unit (Pest) | Timezone edge cases (DST, midnight) |
 | `CompositeSessionCredentialResolver` | Unit with temp files / env | Fallback order |
 | `CursorUsageClient` | Feature with `Http::fake()` | Pagination + mapping |

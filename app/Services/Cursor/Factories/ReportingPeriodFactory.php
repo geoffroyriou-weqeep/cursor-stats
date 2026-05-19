@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Services\Cursor;
+namespace App\Services\Cursor\Factories;
 
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Enums\DatePreset;
 use Carbon\CarbonImmutable;
 
 final class ReportingPeriodFactory

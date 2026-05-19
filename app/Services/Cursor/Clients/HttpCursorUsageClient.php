@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Services\Cursor;
+namespace App\Services\Cursor\Clients;
 
 use App\Services\Cursor\Contracts\CursorUsageClient;
 use App\Services\Cursor\Contracts\SessionCredentialResolver;
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Dto\UsageEventDto;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
 use Illuminate\Support\Facades\Http;
 

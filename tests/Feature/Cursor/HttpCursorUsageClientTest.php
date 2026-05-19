@@ -1,10 +1,10 @@
 <?php
 
+use App\Services\Cursor\Clients\HttpCursorUsageClient;
 use App\Services\Cursor\Contracts\SessionCredentialResolver;
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Dto\SessionCredential;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
-use App\Services\Cursor\HttpCursorUsageClient;
-use App\Services\Cursor\ReportingPeriod;
-use App\Services\Cursor\SessionCredential;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {

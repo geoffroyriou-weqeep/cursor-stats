@@ -2,8 +2,8 @@
 
 namespace App\Services\Cursor\Contracts;
 
-use App\Services\Cursor\ReportingPeriod;
-use App\Services\Cursor\UsageEventDto;
+use App\Services\Cursor\Dto\ReportingPeriod;
+use App\Services\Cursor\Dto\UsageEventDto;
 
 interface CursorUsageClient
 {

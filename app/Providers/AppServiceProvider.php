@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Services\Cursor\CompositeSessionCredentialResolver;
+use App\Services\Cursor\Clients\HttpCursorUsageClient;
 use App\Services\Cursor\Contracts\CursorUsageClient;
 use App\Services\Cursor\Contracts\SessionCredentialResolver;
-use App\Services\Cursor\EnvSessionCredentialResolver;
-use App\Services\Cursor\HttpCursorUsageClient;
-use App\Services\Cursor\SqliteSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\CompositeSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\EnvSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\SqliteSessionCredentialResolver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

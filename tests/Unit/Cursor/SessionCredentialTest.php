@@ -1,7 +1,7 @@
 <?php
 
+use App\Services\Cursor\Dto\SessionCredential;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
-use App\Services\Cursor\SessionCredential;
 
 it('builds workos session cookie from sqlite access token jwt', function () {
     $jwt = testCursorAccessTokenJwt();

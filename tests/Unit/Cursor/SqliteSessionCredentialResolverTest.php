@@ -1,7 +1,7 @@
 <?php
 
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
-use App\Services\Cursor\SqliteSessionCredentialResolver;
+use App\Services\Cursor\Resolvers\SqliteSessionCredentialResolver;
 
 function createCursorStateDatabase(string $token): string
 {

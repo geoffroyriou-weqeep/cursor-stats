@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Services\Cursor;
+namespace App\Services\Cursor\Resolvers;
 
 use App\Services\Cursor\Contracts\SessionCredentialResolver;
+use App\Services\Cursor\Dto\SessionCredential;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
 
 final class CompositeSessionCredentialResolver implements SessionCredentialResolver
