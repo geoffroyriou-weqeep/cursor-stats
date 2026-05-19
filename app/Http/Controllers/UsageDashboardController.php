@@ -19,14 +19,16 @@ class UsageDashboardController extends Controller
         UsageSummaryBuilder $summaryBuilder,
     ): View {
         try {
-            $preset = $request->preset();
-            $period = $periodFactory->forPreset($preset);
+            $period = $request->reportingPeriod($periodFactory);
             $events = $usageClient->fetchUsageEvents($period);
             $summary = $summaryBuilder->build($events);
 
             return view('usage.dashboard', [
                 'period' => $period,
-                'preset' => $preset,
+                'preset' => $request->usesCustomRange() ? null : $request->preset(),
+                'isCustomRange' => $request->usesCustomRange(),
+                'customFrom' => $request->customFrom(),
+                'customTo' => $request->customTo(),
                 'summary' => $summary,
             ]);
         } catch (CursorSessionUnavailableException $exception) {

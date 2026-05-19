@@ -16,7 +16,7 @@
                     $href = $presetOption === \App\Services\Cursor\DatePreset::Today
                         ? url('/')
                         : url('/?preset='.$presetOption->value);
-                    $isActive = $preset === $presetOption;
+                    $isActive = ! $isCustomRange && $preset === $presetOption;
                 @endphp
                 <a
                     href="{{ $href }}"
@@ -31,6 +31,53 @@
                 </a>
             @endforeach
         </nav>
+
+        <form
+            method="GET"
+            action="{{ url('/') }}"
+            class="mt-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+            aria-label="Période personnalisée"
+        >
+            <p class="text-sm font-medium text-zinc-700">Personnalisé</p>
+            <div class="mt-3 flex flex-wrap items-end gap-3">
+                <div>
+                    <label for="from" class="block text-xs font-medium text-zinc-500">Du</label>
+                    <input
+                        id="from"
+                        type="date"
+                        name="from"
+                        value="{{ old('from', $customFrom) }}"
+                        required
+                        class="mt-1 rounded-lg border border-zinc-200 px-2 py-1.5 text-sm text-zinc-900"
+                    />
+                </div>
+                <div>
+                    <label for="to" class="block text-xs font-medium text-zinc-500">Au</label>
+                    <input
+                        id="to"
+                        type="date"
+                        name="to"
+                        value="{{ old('to', $customTo) }}"
+                        required
+                        class="mt-1 rounded-lg border border-zinc-200 px-2 py-1.5 text-sm text-zinc-900"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    @class([
+                        'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                        'bg-zinc-900 text-white' => $isCustomRange,
+                        'bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50' => ! $isCustomRange,
+                    ])
+                    @if ($isCustomRange) aria-current="page" @endif
+                >
+                    Appliquer
+                </button>
+            </div>
+            @if ($errors->any())
+                <p class="mt-3 text-sm text-red-600">{{ $errors->first() }}</p>
+            @endif
+        </form>
     </header>
 
     <dl class="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm">
