@@ -1,9 +1,10 @@
 <?php
 
 use App\Services\Cursor\Contracts\CursorUsageClient;
+use App\Services\Cursor\ReportingPeriod;
 use App\Services\Cursor\UsageEventDto;
 
-it('renders today usage summary on the dashboard', function () {
+it('renders today usage summary on the dashboard by default', function () {
     config([
         'cursor_stats.session_cookie' => 'test-session-token',
         'cursor_stats.timezone' => 'Europe/Paris',
@@ -12,6 +13,7 @@ it('renders today usage summary on the dashboard', function () {
     $this->mock(CursorUsageClient::class, function ($mock) {
         $mock->shouldReceive('fetchUsageEvents')
             ->once()
+            ->with(Mockery::on(fn (ReportingPeriod $period) => $period->label === 'Aujourd\'hui'))
             ->andReturn([
                 new UsageEventDto(1, true, 100, 50, 10, 2.5),
             ]);
@@ -24,6 +26,83 @@ it('renders today usage summary on the dashboard', function () {
         ->assertSee('Input')
         ->assertSee('Montant réel')
         ->assertSee('0,03 €');
+});
+
+it('renders yesterday usage summary when preset is yesterday', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')
+            ->once()
+            ->with(Mockery::on(fn (ReportingPeriod $period) => $period->label === 'Hier'))
+            ->andReturn([
+                new UsageEventDto(1, true, 200, 0, 0, 1.0),
+            ]);
+    });
+
+    $response = $this->get('/?preset=yesterday');
+
+    $response->assertOk()
+        ->assertSee('Hier')
+        ->assertSee('0,01 €');
+});
+
+it('renders last 7 days usage summary when preset is last_7_days', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')
+            ->once()
+            ->with(Mockery::on(fn (ReportingPeriod $period) => str_starts_with($period->label, '7 derniers jours')))
+            ->andReturn([
+                new UsageEventDto(1, true, 10, 10, 10, 5.0),
+            ]);
+    });
+
+    $response = $this->get('/?preset=last_7_days');
+
+    $response->assertOk()
+        ->assertSee('7 derniers jours')
+        ->assertSee('0,05 €');
+});
+
+it('shows preset navigation with the active preset highlighted', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')->andReturn([]);
+    });
+
+    $this->get('/?preset=yesterday')
+        ->assertOk()
+        ->assertSee('aria-current="page"', false);
+});
+
+it('falls back to today when preset query value is invalid', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')
+            ->once()
+            ->with(Mockery::on(fn (ReportingPeriod $period) => $period->label === 'Aujourd\'hui'))
+            ->andReturn([]);
+    });
+
+    $this->get('/?preset=invalid')
+        ->assertOk()
+        ->assertSee('Aujourd');
 });
 
 it('renders auth failure when session cookie is missing', function () {

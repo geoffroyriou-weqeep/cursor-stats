@@ -9,6 +9,28 @@
         <p class="mt-1 text-sm text-zinc-500">
             Fuseau : {{ config('cursor_stats.timezone') }} — rechargez la page pour actualiser.
         </p>
+
+        <nav class="mt-4 flex flex-wrap gap-2" aria-label="Période">
+            @foreach (\App\Services\Cursor\DatePreset::cases() as $presetOption)
+                @php
+                    $href = $presetOption === \App\Services\Cursor\DatePreset::Today
+                        ? url('/')
+                        : url('/?preset='.$presetOption->value);
+                    $isActive = $preset === $presetOption;
+                @endphp
+                <a
+                    href="{{ $href }}"
+                    @class([
+                        'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                        'bg-zinc-900 text-white' => $isActive,
+                        'bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50' => ! $isActive,
+                    ])
+                    @if ($isActive) aria-current="page" @endif
+                >
+                    {{ $presetOption->label() }}
+                </a>
+            @endforeach
+        </nav>
     </header>
 
     <dl class="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm">
