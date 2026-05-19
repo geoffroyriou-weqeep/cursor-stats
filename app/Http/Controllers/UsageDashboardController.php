@@ -6,6 +6,7 @@ use App\Services\Cursor\Contracts\CursorUsageClient;
 use App\Services\Cursor\DatePreset;
 use App\Services\Cursor\Exceptions\CursorSessionUnavailableException;
 use App\Services\Cursor\ReportingPeriodFactory;
+use App\Services\Cursor\SqliteSessionCredentialResolver;
 use App\Services\Cursor\UsageSummaryBuilder;
 use Illuminate\View\View;
 
@@ -28,6 +29,7 @@ class UsageDashboardController extends Controller
         } catch (CursorSessionUnavailableException $exception) {
             return view('usage.auth-failure', [
                 'message' => $exception->getMessage(),
+                'sqlitePath' => SqliteSessionCredentialResolver::databasePath(),
             ]);
         }
     }

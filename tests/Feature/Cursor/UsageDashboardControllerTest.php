@@ -27,11 +27,16 @@ it('renders today usage summary on the dashboard', function () {
 });
 
 it('renders auth failure when session cookie is missing', function () {
-    config(['cursor_stats.session_cookie' => null]);
+    config([
+        'cursor_stats.sqlite_path' => sys_get_temp_dir().'/cursor-stats-missing-'.uniqid().'.vscdb',
+        'cursor_stats.session_cookie' => null,
+    ]);
 
     $response = $this->get('/');
 
     $response->assertOk()
         ->assertSee('Session Cursor indisponible')
-        ->assertSee('CURSOR_SESSION_COOKIE');
+        ->assertSee('CURSOR_SESSION_COOKIE')
+        ->assertSee('CURSOR_STATS_SQLITE_PATH')
+        ->assertSee('Étapes recommandées');
 });

@@ -112,3 +112,24 @@ it('throws when cursor rejects the session', function () {
 
     $client->fetchUsageEvents(new ReportingPeriod(0, 1, 'Test'));
 })->throws(CursorSessionUnavailableException::class);
+
+it('throws when cursor returns authorize redirect 404', function () {
+    Http::fake([
+        'cursor.com/api/dashboard/get-filtered-usage-events' => Http::response(
+            ['message' => 'Cannot POST /user_management/authorize?client_id=test'],
+            404,
+        ),
+    ]);
+
+    $resolver = new class implements SessionCredentialResolver
+    {
+        public function resolve(): SessionCredential
+        {
+            return new SessionCredential('WorkosCursorSessionToken=bad');
+        }
+    };
+
+    $client = new HttpCursorUsageClient($resolver);
+
+    $client->fetchUsageEvents(new ReportingPeriod(0, 1, 'Test'));
+})->throws(CursorSessionUnavailableException::class);

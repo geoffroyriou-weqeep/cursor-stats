@@ -44,7 +44,10 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function testCursorAccessTokenJwt(string $subject = 'google-oauth2|user_01TEST'): string
 {
-    // ..
+    $header = rtrim(strtr(base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
+    $payload = rtrim(strtr(base64_encode(json_encode(['sub' => $subject])), '+/', '-_'), '=');
+
+    return $header.'.'.$payload.'.signature';
 }

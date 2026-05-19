@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Services\Cursor\CompositeSessionCredentialResolver;
 use App\Services\Cursor\Contracts\CursorUsageClient;
 use App\Services\Cursor\Contracts\SessionCredentialResolver;
 use App\Services\Cursor\EnvSessionCredentialResolver;
 use App\Services\Cursor\HttpCursorUsageClient;
+use App\Services\Cursor\SqliteSessionCredentialResolver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,7 +17,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(SessionCredentialResolver::class, EnvSessionCredentialResolver::class);
+        $this->app->bind(SessionCredentialResolver::class, function ($app): SessionCredentialResolver {
+            return new CompositeSessionCredentialResolver([
+                $app->make(SqliteSessionCredentialResolver::class),
+                $app->make(EnvSessionCredentialResolver::class),
+            ]);
+        });
         $this->app->bind(CursorUsageClient::class, HttpCursorUsageClient::class);
     }
 

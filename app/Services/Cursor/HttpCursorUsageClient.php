@@ -39,7 +39,7 @@ final class HttpCursorUsageClient implements CursorUsageClient
                 'pageSize' => $pageSize,
             ]);
 
-            if ($response->status() === 401 || $response->status() === 403) {
+            if ($this->isAuthFailureResponse($response->status(), (string) $response->body())) {
                 throw new CursorSessionUnavailableException(
                     'Cursor rejected the session cookie (HTTP '.$response->status().').',
                 );
@@ -59,6 +59,15 @@ final class HttpCursorUsageClient implements CursorUsageClient
         } while (count($events) < $totalCount && count($pageEvents) > 0);
 
         return $events;
+    }
+
+    private function isAuthFailureResponse(int $status, string $body): bool
+    {
+        if ($status === 401 || $status === 403) {
+            return true;
+        }
+
+        return $status === 404 && str_contains($body, 'user_management') && str_contains($body, 'authorize');
     }
 
     /**
