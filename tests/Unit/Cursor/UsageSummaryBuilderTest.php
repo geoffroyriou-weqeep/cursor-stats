@@ -57,3 +57,11 @@ it('formats cost in euros with french separators', function () {
 
     expect($summary->formattedCost())->toBe('12,34 €');
 });
+
+it('formats token counts with french thousands separators', function () {
+    $summary = (new UsageSummaryBuilder)->build([
+        new UsageEventDto(1, true, 1_234_567, 0, 0, 0),
+    ]);
+
+    expect($summary->formattedTokens($summary->inputTokens))->toBe('1 234 567');
+});

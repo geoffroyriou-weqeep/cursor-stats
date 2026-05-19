@@ -24,8 +24,30 @@ it('renders today usage summary on the dashboard by default', function () {
     $response->assertOk()
         ->assertSee('Aujourd')
         ->assertSee('Input')
+        ->assertSee('Output')
+        ->assertSee('Cache read')
         ->assertSee('Montant réel')
-        ->assertSee('0,03 €');
+        ->assertSee('0,03 €')
+        ->assertSee('usage inclus valorisé', false);
+});
+
+it('formats large token totals with thousands separators', function () {
+    config([
+        'cursor_stats.session_cookie' => 'test-session-token',
+        'cursor_stats.timezone' => 'Europe/Paris',
+    ]);
+
+    $this->mock(CursorUsageClient::class, function ($mock) {
+        $mock->shouldReceive('fetchUsageEvents')->andReturn([
+            new UsageEventDto(1, true, 1_234_567, 89_012, 3_456, 0),
+        ]);
+    });
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('1 234 567', false)
+        ->assertSee('89 012', false)
+        ->assertSee('3 456', false);
 });
 
 it('renders yesterday usage summary when preset is yesterday', function () {

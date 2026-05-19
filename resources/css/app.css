@@ -8,4 +8,37 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-surface: #12141a;
+    --color-surface-raised: #1a1d26;
+    --color-border-subtle: rgb(255 255 255 / 0.06);
+    --color-border-strong: rgb(255 255 255 / 0.1);
+}
+
+@layer base {
+    body {
+        @apply bg-[#0a0b0f] text-zinc-100;
+    }
+}
+
+@layer utilities {
+    .glass {
+        @apply border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+    }
+
+    .glass-raised {
+        @apply border border-white/10 bg-white/[0.05] backdrop-blur-xl shadow-[0_8px_32px_rgb(0_0_0/0.4)];
+    }
+
+    .text-gradient {
+        @apply bg-gradient-to-r from-violet-300 via-fuchsia-200 to-cyan-300 bg-clip-text text-transparent;
+    }
+
+    .glow-violet {
+        box-shadow: 0 0 80px -20px rgb(139 92 246 / 0.35);
+    }
+
+    .glow-amber {
+        box-shadow: 0 0 60px -15px rgb(245 158 11 / 0.25);
+    }
 }

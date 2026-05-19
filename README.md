@@ -1,58 +1,60 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Cursor Stats
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dashboard personnel pour visualiser votre consommation de tokens Cursor (input, output, cache read) et le **Montant réel** sur une période choisie.
 
-## About Laravel
+**Usage local uniquement** — cette application est conçue pour tourner sur votre machine (Laravel Herd). Elle ne doit pas être déployée en production : vos identifiants de session Cursor restent sur votre poste.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Prérequis
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- [Laravel Herd](https://herd.laravel.com/) (macOS recommandé)
+- Cursor installé et connecté (lecture automatique du token via SQLite)
+- PHP 8.2+, Composer, Node.js (pour Vite/Tailwind)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation locale
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+npm install && npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Servez le projet via Herd (répertoire du projet lié) ou `php artisan serve`, puis ouvrez l’URL locale dans le navigateur.
 
-## Contributing
+## Configuration
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Variables dans `.env` :
 
-## Code of Conduct
+| Variable | Description |
+|----------|-------------|
+| `CURSOR_STATS_TIMEZONE` | Fuseau pour les minuits des périodes (défaut : `Europe/Paris`) |
+| `CURSOR_SESSION_COOKIE` | Cookie `WorkosCursorSessionToken` en secours si la lecture SQLite échoue |
+| `CURSOR_STATS_SQLITE_PATH` | (optionnel) Chemin vers `state.vscdb` de Cursor |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Exemple :
 
-## Security Vulnerabilities
+```env
+CURSOR_STATS_TIMEZONE=Europe/Paris
+CURSOR_SESSION_COOKIE=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Sans cookie configuré, l’app tente de lire le token depuis la base SQLite de Cursor. En cas d’échec, une page d’erreur explique comment corriger la session.
 
-## License
+## Utilisation
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Ouvrez `/` : la **Daily View** (aujourd’hui) s’affiche par défaut.
+- Presets : Aujourd’hui, Hier, 7 derniers jours.
+- Plage personnalisée : dates « Du » / « Au » puis Appliquer.
+- Rechargez la page pour actualiser les données (pas de job ni polling).
+
+## Documentation projet
+
+- Glossaire et vocabulaire : [`CONTEXT.md`](CONTEXT.md)
+- PRD : [`docs/prd/cursor-stats-dashboard.md`](docs/prd/cursor-stats-dashboard.md)
+- Décision API dashboard : [`docs/adr/0001-usage-via-dashboard-api.md`](docs/adr/0001-usage-via-dashboard-api.md)
+
+## Tests
+
+```bash
+php artisan test
+```
