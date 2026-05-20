@@ -64,9 +64,62 @@ _Avoid_: TZ, locale
 L'API web non officielle du dashboard Cursor (`POST cursor.com/api/dashboard/get-filtered-usage-events`), authentifiée par session utilisateur.
 _Avoid_: Admin API, Analytics API
 
+**Composer Session Registry**:
+Métadonnées locales des **Composer Session** (SQLite `composer.composerHeaders` : `composerId`, **Composer Session Title**, fenêtres temporelles, workspace). Ne contient pas de **Usage Events** ni de tokens — sert uniquement à l'**Estimated Attribution**.
+_Avoid_: Source de facturation locale, liste d'events dans le fil
+
+**Agent Transcript**:
+Journal local JSONL (`~/.cursor/projects/.../agent-transcripts/<composerId>/`) : messages `role` user/assistant, texte et blocs `tool_use` (`name`, `input` seulement). **Sans timestamp par ligne**, sans `generationUUID` structuré, sans tokens. Le dossier identifie la **Composer Session** ; pas de jointure event API ↔ tour de chat.
+_Avoid_: Source d'events facturables, clé de jointure vers l'API usage
+
+**Workspace Generation**:
+Entrée locale `aiService.generations` (par workspace) : `unixMs`, `generationUUID`, `type`, `textDescription` — **sans `composerId`**. Repère temporel projet, pas clé d'attribution par fil ni lien vers un **Usage Event** API (champs absents côté API observée).
+_Avoid_: Remplacer le **Composer Session Registry**, identifiant de facturation
+
 **Session Credential**:
 Le secret qui prouve l'identité auprès de l'API dashboard. Résolu en hybride : lecture automatique depuis Cursor local (SQLite), avec repli sur cookie `WorkosCursorSessionToken` en configuration. Usage strictement personnel, jamais versionné.
 _Avoid_: API key, clé Admin
+
+**Composer Session**:
+Un fil Composer ou une fenêtre Agent Cursor, identifié par `composerId` (UUID). Fenêtre temporelle locale `createdAt` → `lastUpdatedAt` (registre `composer.composerHeaders`). Distinct de la **Session Credential** (auth API).
+_Avoid_: Session, conversation, chat (seul)
+
+**Estimated Attribution**:
+Affectation heuristique d'un **Usage Event** à une **Composer Session** par recoupement de timestamps en millisecondes (pas d'identifiant commun API ↔ Cursor). Non officielle ; peut laisser des événements non attribués. S'applique aussi aux events `isHeadless` — pas de règle d'attribution dédiée.
+_Avoid_: Facturation par fil, jointure exacte, bucket headless séparé
+
+**Attribution Tie-Break**:
+Si plusieurs **Composer Session** ont une fenêtre qui contient le `timestamp` de l'event : retenir celle dont le `createdAt` est le **plus récent** encore ≤ timestamp (dernière session ouverte au moment de l'appel).
+_Avoid_: Première ouverte, non attribué systématique en chevauchement
+
+
+**Composer Session Title**:
+Libellé affiché d'une **Composer Session** — champ `name` du registre Cursor (`composer.composerHeaders`). Utilisé dans le sélecteur de fils ; repli UI si absent (ex. identifiant tronqué).
+_Avoid_: Titre de conversation, subject
+
+**Composer Workspace Path**:
+Chemin projet local (`workspaceIdentifier.uri.fsPath`) affiché en sous-titre sous le **Composer Session Title** dans la **Daily Composer Session List** (tronqué pour la lisibilité).
+_Avoid_: Hash workspace seul, titre seul quand plusieurs projets
+
+**Daily Composer Session List**:
+Liste de sélection des **Composer Session** « du jour » : fenêtre calendaire = **Daily View** (**Reporting Timezone**, minuit → minuit), indépendante de la **Date Range** du résumé global. Critère d'inclusion : la fenêtre locale `[createdAt, lastUpdatedAt ?? now]` **intersecte** ce jour (fil créé hier mais encore actif aujourd'hui → inclus). Tri : `lastUpdatedAt` décroissant (`null` en fin de liste ou repli sur `createdAt`).
+_Avoid_: Date Range sur la zone session, « créée aujourd'hui » seule, tri alphabétique par défaut
+
+**Session Usage Breakdown**:
+Zone UI juxtaposée à l'**Usage Summary** global : **50 / 50** sur viewport large (global à gauche, fil du jour à droite), empilées sur petit écran. **Daily Composer Session List** + détail au choix d'une session (même cartes métriques, **Estimated Attribution**). Le sélecteur de **Date Range** reste pleine largeur au-dessus. Sélection via `?composer=<composerId>` ; id invalide → **rediriger** sans le paramètre. Pas de bandeau « attribution estimée » (usage personnel).
+_Avoid_: Zone session sous le global (desktop), colonnes asymétriques 60/40, tableau multi-jours
+
+**Selected Session Summary**:
+**Usage Summary** affiché pour une **Composer Session** choisie dans le **Session Usage Breakdown**, calculé uniquement sur les **Usage Events** du jour qui lui sont attribués.
+_Avoid_: Résumé global filtré, stats lifetime du fil
+
+**Unattributed Event Count**:
+Nombre d'**Usage Events** du jour (tous types, pas seulement token-based) sans **Estimated Attribution** vers une **Composer Session**. Exclus du **Selected Session Summary** ; affiché sous le résumé du fil **uniquement lorsqu'un fil est sélectionné** (ex. « N appels non rattachés à un fil »).
+_Avoid_: Ligne « Non attribué » dans le sélecteur, compteur visible sans sélection, décompte token-based seulement
+
+**Token-Based Event Count**:
+Nombre d'**Usage Events** du jour avec `isTokenBasedCall` — même population que les totaux tokens, **Contexte moyen** et **Usage Cost** d'un résumé. Exposé sous le **Selected Session Summary** ; le global conserve `eventCount` (tous types) inchangé.
+_Avoid_: Remplacer eventCount partout, mélanger les deux libellés sans distinction
 
 ## Relationships
 
@@ -74,6 +127,11 @@ _Avoid_: API key, clé Admin
 - Une **Usage Summary** agrège les **Token Breakdown**, l'**Average Context Size** et le **Usage Cost** de tous les **Usage Events** de la Date Range (événements non token-based exclus du décompte tokens et de la moyenne)
 - Chaque **Usage Event** possède au plus un **Token Breakdown** ; sa composante input est le **Context Size** de l'événement (donnée intermédiaire, jamais affichée seule)
 - **Reporting Timezone** s'applique à toute **Daily View** et toute **Date Range**
+- L'**Usage Summary** global suit la **Date Range** choisie en tête de page ; le **Session Usage Breakdown** utilise toujours la **Daily View** pour la **Daily Composer Session List** et le **Selected Session Summary** (découplage volontaire si la plage globale ≠ aujourd'hui)
+- Les **Usage Events** (tokens, coût) proviennent uniquement de l'**Usage Data Source** ; le **Composer Session Registry** ne duplique pas ces données
+- **Session Usage Breakdown** : charger les **Usage Events** du jour via l'API, charger les **Composer Session** du jour via le registre local, puis attribuer chaque event API vers au plus une session (parcours events → session, pas l'inverse)
+- Une **Composer Session** du jour est incluse dans la **Daily Composer Session List** si sa fenêtre locale intersecte le jour courant en **Reporting Timezone**
+- Le **Selected Session Summary** agrège uniquement les **Usage Events** du jour attribués à la session sélectionnée ; le **Token-Based Event Count** décrit cette population sous les cartes du fil ; le **Unattributed Event Count** (jour entier, tous types) n'apparaît qu'avec un fil sélectionné, sous son résumé
 
 ## Example dialogue
 

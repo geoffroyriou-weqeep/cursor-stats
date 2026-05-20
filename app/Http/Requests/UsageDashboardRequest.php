@@ -25,6 +25,7 @@ class UsageDashboardRequest extends FormRequest
             'preset' => ['sometimes', 'nullable', 'string', 'max:32'],
             'from' => ['required_with:to', 'nullable', 'date', 'date_format:Y-m-d'],
             'to' => ['required_with:from', 'nullable', 'date', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'composer' => ['sometimes', 'nullable', 'uuid'],
         ];
     }
 
@@ -135,5 +136,75 @@ class UsageDashboardRequest extends FormRequest
             (string) $this->query('to'),
             config('cursor_stats.timezone'),
         );
+    }
+
+    public function composerId(): ?string
+    {
+        $value = $this->query('composer');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @param  list<string>  $validComposerIds
+     */
+    public function isComposerValidForDailyList(array $validComposerIds): bool
+    {
+        $composerId = $this->composerId();
+
+        if ($composerId === null) {
+            return true;
+        }
+
+        return in_array($composerId, $validComposerIds, true);
+    }
+
+    public function urlWithoutComposer(): string
+    {
+        $query = $this->query();
+        unset($query['composer']);
+
+        $path = $this->path() === '/' ? '/' : '/'.$this->path();
+
+        if ($query === []) {
+            return url($path);
+        }
+
+        return url($path).'?'.http_build_query($query);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function periodQueryParams(): array
+    {
+        if ($this->usesCustomRange()) {
+            return array_filter([
+                'from' => $this->customFrom(),
+                'to' => $this->customTo(),
+            ]);
+        }
+
+        $preset = $this->preset();
+
+        if ($preset === DatePreset::Today) {
+            return [];
+        }
+
+        return ['preset' => $preset->value];
+    }
+
+    /**
+     * @param  array<string, string>  $extra
+     */
+    public function urlWithQuery(array $extra = []): string
+    {
+        $query = array_merge($this->periodQueryParams(), $extra);
+
+        if ($query === []) {
+            return url('/');
+        }
+
+        return url('/').'?'.http_build_query($query);
     }
 }

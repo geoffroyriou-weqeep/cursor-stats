@@ -11,6 +11,7 @@ final readonly class UsageSummary
         public int $averageContextSize,
         public int $usageCostCents,
         public int $eventCount,
+        public int $tokenBasedEventCount = 0,
     ) {}
 
     public function formattedCost(): string

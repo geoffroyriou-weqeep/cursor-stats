@@ -44,6 +44,7 @@ final class UsageSummaryBuilder
             averageContextSize: $averageContextSize,
             usageCostCents: (int) round($usageCostCents),
             eventCount: $eventCount,
+            tokenBasedEventCount: $tokenBasedEventCount,
         );
     }
 }

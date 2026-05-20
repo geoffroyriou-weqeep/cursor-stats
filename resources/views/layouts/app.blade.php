@@ -14,7 +14,7 @@
             <div class="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-fuchsia-400/15 blur-[80px]"></div>
         </div>
 
-        <main class="relative mx-auto min-h-screen max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+        <main class="relative mx-auto min-h-screen max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
             @yield('content')
         </main>
     </body>

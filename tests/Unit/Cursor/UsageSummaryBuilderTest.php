@@ -38,7 +38,8 @@ it('aggregates token totals and cost for token-based events only', function () {
         ->and($summary->cacheReadTokens)->toBe(250)
         ->and($summary->averageContextSize)->toBe(1500)
         ->and($summary->usageCostCents)->toBe(4)
-        ->and($summary->eventCount)->toBe(3);
+        ->and($summary->eventCount)->toBe(3)
+        ->and($summary->tokenBasedEventCount)->toBe(2);
 });
 
 it('returns zeros when there are no events', function () {
@@ -49,7 +50,8 @@ it('returns zeros when there are no events', function () {
         ->and($summary->cacheReadTokens)->toBe(0)
         ->and($summary->averageContextSize)->toBe(0)
         ->and($summary->usageCostCents)->toBe(0)
-        ->and($summary->eventCount)->toBe(0);
+        ->and($summary->eventCount)->toBe(0)
+        ->and($summary->tokenBasedEventCount)->toBe(0);
 });
 
 it('formats cost in euros with french separators', function () {
