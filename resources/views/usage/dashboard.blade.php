@@ -31,7 +31,7 @@
 
     <div class="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-6">
         {{-- Colonne gauche (50 %) : période + résumé par Date Range --}}
-        <section aria-label="Usage Summary" class="min-w-0 space-y-5">
+        <section aria-label="Usage Summary" class="min-w-0 space-y-5 rounded-3xl bg-white p-6 ring-1 ring-white/10 border border-zinc-200">
             <h2 class="text-sm font-semibold uppercase tracking-widest text-zinc-500">Par période</h2>
 
             <div class="glass-raised overflow-hidden rounded-2xl">
@@ -95,19 +95,21 @@
             @include('usage.partials.summary-cards', ['summary' => $summary, 'showTokenBasedCount' => false])
         </section>
 
-        {{-- Colonne droite (50 %) : résumé par Composer Session --}}
-        <section aria-label="Session Usage Breakdown" class="min-w-0 space-y-5">
+        {{-- Colonne droite (50 %) : résumé par Composer Session — thème sombre --}}
+        <section aria-label="Session Usage Breakdown"
+            class="dark min-w-0 space-y-5 rounded-3xl bg-slate-700 p-6 ring-1 ring-white/10">
             <div>
-                <h2 class="text-sm font-semibold uppercase tracking-widest text-zinc-500">Par fil</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-widest text-zinc-400">Par fil</h2>
             </div>
 
-            <div class="glass-raised rounded-2xl px-4 py-4 sm:px-5 h-[223px]">
-                <label for="composer" class="mb-1.5 block text-xs font-medium text-zinc-500">Fil Composer</label>
+            <div
+                class="h-[223px] overflow-hidden rounded-2xl border border-zinc-700/50 bg-slate-800 px-4 py-4 backdrop-blur-xl shadow-[0_4px_24px_rgb(0_0_0/0.25)] sm:px-5">
+                <label for="composer" class="mb-1.5 block text-xs font-medium text-zinc-200">Fil Composer</label>
                 @if ($dailySessions === [])
-                    <p class="text-sm text-zinc-500">Aucun fil actif aujourd'hui.</p>
+                    <p class="text-sm text-zinc-400">Aucun fil actif aujourd'hui.</p>
                 @else
                     <select id="composer" name="composer" aria-label="Choisir un fil Composer"
-                        class="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15 [color-scheme:light]"
+                        class="w-full rounded-xl border border-slate-600 bg-slate-700/60 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 [color-scheme:dark]"
                         onchange="window.location.assign(this.value || @js($dashboardRequest->urlWithoutComposer()))">
                         <option value="" @selected($selectedComposerId === null)>Choisir un fil…</option>
                         @foreach ($dailySessions as $session)
@@ -128,15 +130,15 @@
 
             @if ($selectedSession === null)
                 <div
-                    class="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/80 px-4 py-10 text-center sm:px-5">
-                    <p class="text-sm font-medium text-zinc-600">Choisir un fil</p>
+                    class="rounded-2xl border border-dashed border-zinc-700 bg-zinc-800/40 px-4 py-10 text-center sm:px-5">
+                    <p class="text-sm font-medium text-zinc-300">Choisir un fil</p>
                     <p class="mt-2 text-xs text-zinc-500">Sélectionnez un fil dans la liste déroulante pour voir son
                         résumé du jour.</p>
                 </div>
             @else
                 <div class="space-y-5">
                     @if ($selectedSession->workspacePath)
-                        <p class="truncate text-xs text-zinc-500" title="{{ $selectedSession->workspacePath }}">
+                        <p class="truncate text-xs text-zinc-400" title="{{ $selectedSession->workspacePath }}">
                             {{ \Illuminate\Support\Str::limit($selectedSession->workspacePath, 72) }}
                         </p>
                     @endif
